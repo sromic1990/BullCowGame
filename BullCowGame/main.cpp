@@ -4,20 +4,24 @@ This acts as a view in a MVC pattern and is responsible for all user interaction
 For game logic, see the FBullCowGame class.
 */
 
+#pragma once
+
 #include <iostream>
 #include <string>
 #include "FBullCowGame.h"
 
+//to make syntax Unreal friendly
 using FText = std::string;
 using int32 = int;
 
-FBullCowGame BCGame; //instantiate a new game
-
+//function prototypes as outside a class
 void PrintIntro();
 void PlayGame();
 bool AskToPlayAgain();
 FText GetValidGuess();
 void PrintGameSummary();
+
+FBullCowGame BCGame; //instantiate a new game which we re-use across plays
 
 //the entry point for our application
 int main()
@@ -31,7 +35,6 @@ int main()
 	return 0;
 }
 
-//introduce the game
 void PrintIntro()
 {
 	std::cout << "\n\nWelcome to Bulls and Cows, a fun word game." << std::endl;
@@ -49,20 +52,20 @@ FText GetValidGuess()
 	{
 		//Get a guess from the player
 		int32 CurrentTry = BCGame.GetCurrentTry();
-		std::cout << "Try "<<CurrentTry<<". Enter your Guess: ";
+		std::cout << "Try "<<CurrentTry<<" of " << BCGame.GetMaxTries()<<". Enter your Guess: ";
 		std::getline(std::cin, Guess);
 
 		status = BCGame.CheckGuessValidity(Guess);
 		switch (status)
 		{
 		case EGuessWordStatus::NOT_ISOGRAM:
-			std::cout << "Please enter a word without repeating letters!\n";
+			std::cout << "Please enter a word without repeating letters!\n\n";
 			break;
 		case EGuessWordStatus::WRONG_LENGTH:
-			std::cout << "Please enter a " << BCGame.GetHiddenWordLength() << " letter word\n";
+			std::cout << "Please enter a " << BCGame.GetHiddenWordLength() << " letter word\n\n";
 			break;
 		case EGuessWordStatus::NOT_LOWERCASE:
-			std::cout << "Please enter all lowercase letters!\n";
+			std::cout << "Please enter all lowercase letters!\n\n";
 			break;
 		default:
 			break;
@@ -72,6 +75,7 @@ FText GetValidGuess()
 	return Guess;
 }
 
+//Plays a single game to completion
 void PlayGame()
 {
 	BCGame.Reset();
@@ -85,28 +89,13 @@ void PlayGame()
 
 		//Submit valid guess to the game
 		FBullCowCount BullCowCount = BCGame.SubmitValidGuess(Guess);
-		std::cout << "Bulls = " << BullCowCount.Bulls << "\n";
+		std::cout << "Bulls = " << BullCowCount.Bulls << " , ";
 		std::cout << "Cows = " << BullCowCount.Cows << "\n";
 
 		std::cout << "Your Guess was: " << Guess << "\n";
 	}
 
-	//TODO Summerise game here
 	PrintGameSummary();
-	return;
-}
-
-void PrintGameSummary()
-{
-	if (BCGame.IsGameWon)
-	{
-		std::cout << "WELL DONE! - YOU WIN! \n";
-	}
-	else
-	{
-		std::cout << "Better luck next time!\n";
-	}
-
 	return;
 }
 
@@ -117,4 +106,18 @@ bool AskToPlayAgain()
 	std::getline(std::cin, Response);
 
 	return (Response[0] == 'y' || Response[0] == 'Y');
+}
+
+void PrintGameSummary()
+{
+	if (BCGame.IsGameWon())
+	{
+		std::cout << "WELL DONE! - YOU WIN! \n";
+	}
+	else
+	{
+		std::cout << "Better luck next time!\n";
+	}
+
+	return;
 }

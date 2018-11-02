@@ -1,23 +1,66 @@
+#pragma once
 #include "FBullCowGame.h"
+#include <map>
 
-FBullCowGame::FBullCowGame() { Reset(); }
+#define TMap std::map // to make syntax Unreal friendly
 
-int32 FBullCowGame::GetMaxTries() const { return MyMaxTries; }
+FBullCowGame::FBullCowGame() { Reset(); } //default CTor
+
 int32 FBullCowGame::GetCurrentTry() const { return MyCurrentTry;}
 bool FBullCowGame::IsGameWon() const { return bGameIsWon; }
-int32 FBullCowGame::GetHiddenWordLength() const
+int32 FBullCowGame::GetHiddenWordLength() const { return MyHiddenWord.length(); }
+bool FBullCowGame::IsIsogram(FString Word) const
 {
-	return MyHiddenWord.length();
+	//treat 0 and 1 lettered words as isogram
+	if (Word.length() <= 1) return true;
+	
+	//setup the map
+	TMap<char, bool> LetterSeen;
+	//loop through all the letters of the word
+	for (auto letter : Word) // for all letters of the word
+	{
+		letter = tolower(letter); //handle mixed case
+		//if the letter is in the map
+		if (LetterSeen[letter])
+		{
+			//we do NOT have an isogram
+			return false;
+		}
+		//otherwise
+		else
+		{
+			//add the letter to the map as seen
+			LetterSeen[letter] = true;
+		}
+
+	}
+	return true; //for example in cases where /0 is entered.
+}
+bool FBullCowGame::IsLowercase(FString Word) const
+{
+	for (auto letter : Word)
+	{
+		if (!islower(letter))
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+int32 FBullCowGame::GetMaxTries() const 
+{ 
+	TMap<int32, int32> WordLengthToMaxTries{ {3, 4}, {4, 7}, {5,10}, {6,16}, {7, 20} };
+	return WordLengthToMaxTries[GetHiddenWordLength()];
 }
 
 void FBullCowGame::Reset()
 {
 	constexpr int32 MY_CURRENT_TRY = 1;
-	const FString HIDDEN_WORD = "planet";
-	constexpr int32 MY_MAX_TRIES = 8;
+	const FString HIDDEN_WORD = "planet"; // this MUST be an isogram
 	
 	FBullCowGame::MyCurrentTry = MY_CURRENT_TRY;
-	FBullCowGame::MyMaxTries = MY_MAX_TRIES;
 	FBullCowGame::MyHiddenWord = HIDDEN_WORD;
 	FBullCowGame::bGameIsWon = false;
 
@@ -27,24 +70,20 @@ void FBullCowGame::Reset()
 
 EGuessWordStatus FBullCowGame::CheckGuessValidity(FString guess) const
 {
-	if (false)//if the guess isn't an isogram,
+	if (!IsIsogram(guess))
 	{
-		//return an error
 		return EGuessWordStatus::NOT_ISOGRAM;
 	}
-	else if (false)//if the guess isn't lowercase,
+	else if (guess.length() != GetHiddenWordLength())
 	{
-		//return an error
-		return EGuessWordStatus::NOT_LOWERCASE;
-	}
-	else if (guess.length() != GetHiddenWordLength())//if the guess length is wrong
-	{
-		//return an error
 		return EGuessWordStatus::WRONG_LENGTH;
 	}
-	else//otherwise
+	else if (!IsLowercase(guess))
 	{
-		//return ok
+		return EGuessWordStatus::NOT_LOWERCASE;
+	}
+	else
+	{
 		return EGuessWordStatus::OK;
 	}
 }
